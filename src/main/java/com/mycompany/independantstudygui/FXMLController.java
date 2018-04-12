@@ -129,9 +129,7 @@ public class FXMLController implements Initializable {
     @FXML
     private AnchorPane scrollAnchor;
     
-    @FXML
-    private HBox dataHbox;
-    
+        
     @FXML
     private Label timeArea;
     
@@ -187,11 +185,7 @@ public class FXMLController implements Initializable {
         if(timerThread != null)
             timerThread.cancel();
         
-        timeTransition = new TranslateTransition(Duration.millis(time * 1000), timeBox);
-        timeTransition.setByX(scrollPane.widthProperty().get() - 100);
-        
-        timeTransition.play();
-        
+        timeBox.widthProperty().bind(masterTime.divide(time) * scrollPane.widthProperty().subtract(90.0) ) );
         
         if (thermalMedia == null && media == null && audioPlayer == null)
             return;
@@ -236,7 +230,7 @@ public class FXMLController implements Initializable {
                     return new Task<Void>() {
                         protected Void call() {
                             Platform.runLater(() -> {                                
-                                if(playing){
+                                if(playing && (masterTime.get() <= time)){
                                     masterTime.set(masterTime.get() + .05);    
                                     
                                 }                                      
@@ -258,7 +252,7 @@ public class FXMLController implements Initializable {
                             Platform.runLater(() -> {
                                 
                                 if(playing){                                    
-                                    //update();                                      
+                                                                          
                                 }                                       
                                                         
                             });
@@ -289,8 +283,9 @@ public class FXMLController implements Initializable {
         
         
         playing = false;
-        time = 0.0;
-         masterTime.set(0.00);
+        
+        masterTime.set(0.00);
+        
         if (media != null) {
             media.stop();
             media.pause();
@@ -457,12 +452,13 @@ public class FXMLController implements Initializable {
                 config.setMarginBottom(20);
                 config.setMarginTop(20);
                 config.setMarginLeft(85);
+                config.setMarginRight(15);
                 
                 
                 
                 
                 dataViewerVector.get(i).updateConfiguration(config);
-                dataViewerVector.get(i).setMinWidth(1600.0 );
+                //dataViewerVector.get(i).setMinWidth(1600.0 );
                 dataViewerVector.get(i).setMaxHeight(250.0);
                 plotData.addTrace(trace);
                 plotVector.add(plotData);
