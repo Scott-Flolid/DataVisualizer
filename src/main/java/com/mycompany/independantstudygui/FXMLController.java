@@ -185,7 +185,7 @@ public class FXMLController implements Initializable {
         if(timerThread != null)
             timerThread.cancel();
         
-        timeBox.widthProperty().bind(masterTime.divide(time) * scrollPane.widthProperty().subtract(90.0) ) );
+        timeBox.widthProperty().bind(masterTime.divide(time).multiply( scrollPane.widthProperty().subtract(90.0).get() ) );
         
         if (thermalMedia == null && media == null && audioPlayer == null)
             return;
