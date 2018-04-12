@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.concurrent.Service;
@@ -185,7 +186,9 @@ public class FXMLController implements Initializable {
         if(timerThread != null)
             timerThread.cancel();
         
-        timeBox.widthProperty().bind(masterTime.divide(time).multiply( scrollPane.widthProperty().subtract(90.0).get() ) );
+        
+        
+        
         
         if (thermalMedia == null && media == null && audioPlayer == null)
             return;
@@ -479,8 +482,8 @@ public class FXMLController implements Initializable {
                 
         }  //close for loop
                 
-            
-        //addTime(dataViewerVector);
+        //bind width of the "playing green bar to current time/total time * wifth of the scrollpane    
+        timeBox.widthProperty().bind( Bindings.multiply( masterTime.divide(time), scrollPane.widthProperty().subtract(90.0)));
             
         } catch(FileNotFoundException ex ){
             System.out.println(ex);
