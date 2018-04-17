@@ -31,14 +31,19 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.ScheduledService;
+import javafx.scene.Scene;
 
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
@@ -53,7 +58,10 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
@@ -150,6 +158,7 @@ public class FXMLController implements Initializable {
         
     int numColumns;
     int numRows;
+    
     Vector<DataViewer> dataViewerVector = new Vector<>();
     Vector<PlotData> plotVector = new Vector<>();
     
@@ -171,6 +180,12 @@ public class FXMLController implements Initializable {
     
     TranslateTransition timeTransition;
     
+    double collectStart;
+    double collectEnd;
+    
+    
+    
+    String numberChecker = "\\d+";
     
     
     
@@ -195,16 +210,54 @@ public class FXMLController implements Initializable {
         
         if (startButton.getText().equals("Start")) {
             playing = true;
-            
+
             startButton.setText("Pause");
             if (media != null) {
-                media.play();
+
+                new Service<Void>() {
+                    protected Task<Void> createTask() {
+                        return new Task<Void>() {
+                            protected Void call() {
+                                Platform.runLater(() -> {
+                                    media.play();
+                                });
+                                return null;
+                            }
+                        };
+                    }
+                }.start();
+
             }
             if (thermalMedia != null) {
-                thermalMedia.play();
+
+                new Service<Void>() {
+                    protected Task<Void> createTask() {
+                        return new Task<Void>() {
+                            protected Void call() {
+                                Platform.runLater(() -> {
+                                    thermalMedia.play();
+                                });
+                                return null;
+                            }
+                        };
+                    }
+                }.start();
+
             }
             if (audioPlayer != null) {
-                audioPlayer.play();
+                
+                new Service<Void>() {
+                    protected Task<Void> createTask() {
+                        return new Task<Void>() {
+                            protected Void call() {
+                                Platform.runLater(() -> {
+                                    audioPlayer.play();
+                                });
+                                return null;
+                            }
+                        };
+                    }
+                }.start();
             }
             
 
@@ -234,7 +287,7 @@ public class FXMLController implements Initializable {
                         protected Void call() {
                             Platform.runLater(() -> {                                
                                 if(playing && (masterTime.get() <= time)){
-                                    masterTime.set(masterTime.get() + .05);    
+                                    masterTime.set(masterTime.get() + .075);    
                                     
                                 }                                      
                                                         
@@ -245,7 +298,7 @@ public class FXMLController implements Initializable {
                 }
             };
         
-        timerThread.setPeriod(Duration.millis(50));
+        timerThread.setPeriod(Duration.millis(75));
         timerThread.start();
        
         graphThread = new ScheduledService<Void>() {
@@ -283,7 +336,7 @@ public class FXMLController implements Initializable {
     void stop(ActionEvent event) {
         
         
-        
+        collectButton.setText("Collect");
         
         playing = false;
         
@@ -332,6 +385,26 @@ public class FXMLController implements Initializable {
     
     @FXML
     void getCSV(ActionEvent event) throws FileNotFoundException, IOException {
+        
+        
+        
+        if (!frequency.getText().matches(numberChecker)) {
+
+            Alert alert = new Alert(AlertType.ERROR, "Make sure frequency field is set to a number", ButtonType.OK);
+            alert.setHeaderText("");
+            
+            alert.showAndWait();
+
+            if (alert.getResult() == ButtonType.YES) {
+                return ;
+            }
+            
+            return;
+        }
+        
+        freq = Double.parseDouble(frequency.getText());
+        
+        
         FileChooser csvChooser = new FileChooser();        
         //add filter to only get csv files
         FileChooser.ExtensionFilter csvExtension = 
@@ -497,7 +570,7 @@ public class FXMLController implements Initializable {
     public void update(){
         
         LineTrace<Double> playTrace = new LineTrace<>();
-        playTrace.setTraceColour(TraceColour.GREEN);
+        playTrace.setTraceColour(TraceColour.BLUE);
         
         for (int i = 0; i < 1; i++) {
              
@@ -513,6 +586,36 @@ public class FXMLController implements Initializable {
             dataViewerVector.get(i).updatePlot(plotVector.get(i));
             dataViewerVector.get(i).updatePlot(plot);
 
+        }
+    }
+    
+     public void updateCollect(){
+        
+        LineTrace<Double> playTrace = new LineTrace<>();
+        playTrace.setTraceColour(TraceColour.BLUE);
+        
+        for (int i = 0; i < numColumns; i++) {             
+            
+            
+            playTrace.setxArray(copyOfRange( timeValues.get(i) ,(int) Math.round(collectStart * freq) ,(int) Math.round(collectEnd * freq)  ));
+            playTrace.setyArray(copyOfRange( dataSets.get(i) ,(int) Math.round(collectStart * freq) ,(int) Math.round(collectEnd * freq) ));
+            
+            PlotData plot = new PlotData();
+            plot.addTrace(playTrace);
+            //dataViewerVector.get(i).resetPlot();
+            
+            dataViewerVector.get(i).updatePlot(plotVector.get(i));
+            dataViewerVector.get(i).updatePlot(plot);
+
+        }
+    }
+     
+     public void refresh(){ 
+         
+        for (int i = 0; i < numColumns; i++) {   
+            
+            dataViewerVector.get(i).resetPlot();            
+            dataViewerVector.get(i).updatePlot(plotVector.get(i));
         }
     }
     
@@ -600,6 +703,54 @@ public class FXMLController implements Initializable {
         }
     }
     
+    @FXML
+    void collect(ActionEvent event) {
+        
+        
+        if(collectButton.getText().equals("Collect")){
+           
+            collectStart = masterTime.get();
+            collectButton.setText("Stop Collect"); 
+            
+            Service refreshThread = new Service<Void>() {
+                protected Task<Void> createTask() {
+                    return new Task<Void>() {
+                        protected Void call() {
+                            Platform.runLater(() -> {                                
+                                refresh();                                
+                                                        
+                            });
+                            return null;
+                        }
+                    };
+                }
+            };
+            refreshThread.start();
+            
+        } else if(collectButton.getText().equals("Stop Collect")){
+            collectEnd = masterTime.get();
+            collectButton.setText("Collect");
+            
+            Service collectThread = new Service<Void>() {
+                protected Task<Void> createTask() {
+                    return new Task<Void>() {
+                        protected Void call() {
+                            Platform.runLater(() -> {                                
+                                updateCollect();                                    
+                                                        
+                            });
+                            return null;
+                        }
+                    };
+                }
+            };
+            collectThread.start();
+                       
+        }
+        
+
+    }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
@@ -607,9 +758,10 @@ public class FXMLController implements Initializable {
         
         timeArea.textProperty().bind(masterTime.asString("%.2f"));
         
+        scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
          
-        GraphVBox.maxWidthProperty().bind(scrollPane.widthProperty());
-        GraphVBox.minWidthProperty().bind(scrollPane.widthProperty());
+        GraphVBox.maxWidthProperty().bind(scrollPane.widthProperty().subtract(10));
+        GraphVBox.minWidthProperty().bind(scrollPane.widthProperty().subtract(10));
         
         VideoPlayer.fitWidthProperty().bind(videoPane.widthProperty());
         VideoPlayer.fitHeightProperty().bind(videoPane.heightProperty());

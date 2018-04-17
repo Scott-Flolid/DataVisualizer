@@ -107,7 +107,7 @@
                   <Label layoutX="208.0" layoutY="18.0" text="Data Frequency:" />
                   <Button fx:id="stopButton" layoutX="294.0" layoutY="94.0" mnemonicParsing="false" onAction="#stop" prefHeight="25.0" prefWidth="70.0" text="Stop" />
                   <Button fx:id="startButton" layoutX="208.0" layoutY="94.0" mnemonicParsing="false" onAction="#start" prefHeight="25.0" prefWidth="69.0" text="Start" />
-                  <Button fx:id="collectButton" layoutX="210.0" layoutY="47.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="154.0" text="Collect" />
+                  <Button fx:id="collectButton" layoutX="210.0" layoutY="47.0" mnemonicParsing="false" onAction="#collect" prefHeight="25.0" prefWidth="154.0" text="Mark " />
                   <MediaView fx:id="mp3Media" fitHeight="10.0" fitWidth="10.0" layoutX="122.0" layoutY="119.0" />
                   <TextField fx:id="audioOffset" layoutX="107.0" layoutY="117.0" prefHeight="25.0" prefWidth="83.0" />
                   <Label layoutX="25.0" layoutY="121.0" text="Audio Offset" />
