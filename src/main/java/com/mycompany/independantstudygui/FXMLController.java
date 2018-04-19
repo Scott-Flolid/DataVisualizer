@@ -204,7 +204,7 @@ public class FXMLController implements Initializable {
     //regex for making sure fields are digits
     String numberChecker = "\\d+(\\.\\d+)?";
     
-    
+    NumberFormat formatter = new DecimalFormat("#0.00");
     
     
     
@@ -606,23 +606,6 @@ public class FXMLController implements Initializable {
         
     }
     
-    
-     
-
-
-       
-     
-     public void refreshGraphs(){ 
-         
-        for (int i = 0; i < numColumns; i++) {   
-            
-            dataViewerVector.get(i).resetPlot();            
-            dataViewerVector.get(i).updatePlot(plotVector.get(i));
-        }
-    }
-    
-    
-    
     @FXML
     void getMp4(ActionEvent event) {
         FileChooser mp4Chooser = new FileChooser();        
@@ -643,7 +626,17 @@ public class FXMLController implements Initializable {
             VideoPlayer.setMediaPlayer(media);
         }
     }
-
+     
+     public void refreshGraphs(){ 
+         
+        for (int i = 0; i < numColumns; i++) {   
+            
+            dataViewerVector.get(i).resetPlot();            
+            dataViewerVector.get(i).updatePlot(plotVector.get(i));
+        }
+    }
+    
+    
     @FXML
     void getThermal(ActionEvent event) {
         FileChooser thermalChooser = new FileChooser();        
@@ -665,6 +658,9 @@ public class FXMLController implements Initializable {
         }
     }
     
+    
+
+    
     @FXML
     void collect(ActionEvent event) {
         
@@ -681,7 +677,7 @@ public class FXMLController implements Initializable {
                                                                
                                 collectStart = masterTime.get();
                                 collectButton.setText("End Marking");
-                                markStart.setText(collectStart.toString());
+                                markStart.setText(formatter.format(collectStart));
                             });
                             return null;
                         }
@@ -701,7 +697,7 @@ public class FXMLController implements Initializable {
                         protected Void call() {
                             Platform.runLater(() -> {  
                                 collectEnd = masterTime.get(); 
-                                markEnd.setText(collectEnd.toString());
+                                markEnd.setText(formatter.format(collectEnd));
                                 //handleStop();
                                 updateCollect();                                    
                                                         
@@ -741,9 +737,134 @@ public class FXMLController implements Initializable {
     
     @FXML
     void addMark(ActionEvent event) {
+        
+        if(dataViewerVector.isEmpty())
+            return;
 
+        if (!markStart.getText().matches(numberChecker) && !markStart.getText().matches(numberChecker)) {
+
+            Alert alert = new Alert(AlertType.ERROR, "Make sure mark Start and End times are valid ", ButtonType.OK);
+            alert.setHeaderText("");
+
+            alert.showAndWait();
+
+            if (alert.getResult() == ButtonType.OK) {
+                return;
+            }
+
+            return;
+        }
+        if (Double.parseDouble(markStart.getText()) > Double.parseDouble(markEnd.getText())) {
+
+            Alert alert = new Alert(AlertType.ERROR, " Mark Start time must be less than mark End time ", ButtonType.OK);
+            alert.setHeaderText("");
+
+            alert.showAndWait();
+
+            if (alert.getResult() == ButtonType.OK) {
+                return;
+            }
+
+            return;
+
+
+        }
+        if (markTitle.getText() == null || markTitle.getText().trim().isEmpty()) {
+
+            
+
+            Alert alert = new Alert(AlertType.ERROR, "Title for Mark cant be empty", ButtonType.OK);
+            alert.initModality(Modality.APPLICATION_MODAL);
+            alert.setHeaderText("");
+
+            alert.showAndWait();
+
+            if (alert.getResult() == ButtonType.OK) {
+                return;
+            }
+
+            return;
+
+        }
+        
+        
+        
+        
+         
+        
+        String title = markTitle.getText();
+        Double startTime = Double.parseDouble(markStart.getText());
+        Double endTime = Double.parseDouble(markEnd.getText());
+        
+        Integer startIndex =(int) Math.round(startTime * freq) ;
+        Integer endIndex =(int) Math.round(endTime * freq) ;
+        
+        if(markedValues.containsKey(title)){
+            
+            Integer markArray[] = markedValues.get(title);
+            
+            for (int i = 0; i < numColumns; i++) {
+
+                
+                if( (i >= startIndex ) && ( i <= endIndex) ){
+                    markArray[i] = 1;
+                } 
+                
+            }
+            
+            
+            Alert alert = new Alert(AlertType.CONFIRMATION, "Update the following Mark?\n\nMark: " 
+                    + title + "\nfrom: " + formatter.format(startTime) + "\nto: "
+                    + formatter.format(endTime), ButtonType.NO, ButtonType.YES);
+            alert.setHeaderText("Confirm Mark");
+            alert.initModality(Modality.APPLICATION_MODAL);
+
+            alert.showAndWait();
+
+            if (alert.getResult() == ButtonType.YES) {
+                markedValues.put(title, markArray);
+                
+            }
+            
+            
+        }else{
+            
+            Integer markArray[] = new Integer[numRows];
+            
+            for (int i = 0; i < numColumns; i++) {
+
+                
+                if( (i >= startIndex ) && ( i <= endIndex) ){
+                    markArray[i] = 1;
+                } else{
+                    markArray[i] = 0;
+                }
+                
+            }
+            
+            
+            Alert alert = new Alert(AlertType.CONFIRMATION, "Save the following Mark?\n\nMark: " 
+                    + title + "\nfrom: " + formatter.format(startTime) + "\nto: "
+                    + formatter.format(endTime), ButtonType.NO, ButtonType.YES);
+            
+            
+            alert.setHeaderText("Confirm Mark");
+            alert.initModality(Modality.APPLICATION_MODAL);
+
+            alert.showAndWait();
+
+            if (alert.getResult() == ButtonType.YES) {
+                markedValues.put(title, markArray);
+                
+            }
+            
+            
+        }
+        
+        
     }
     
+   
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
