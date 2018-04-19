@@ -20,6 +20,8 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import static java.util.Arrays.copyOfRange;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -154,6 +156,18 @@ public class FXMLController implements Initializable {
     @FXML
     private Rectangle timeBox;
     
+    @FXML
+    private TextField markStart;
+
+    @FXML
+    private TextField markEnd;
+
+    @FXML
+    private TextField markTitle;
+
+    @FXML
+    private Button saveMark;
+    
     /********************************************************/
         
     int numColumns;
@@ -164,6 +178,8 @@ public class FXMLController implements Initializable {
     
     ArrayList<Double[]> dataSets = new ArrayList<Double[]>();
     ArrayList<Double[]> timeValues = new ArrayList<Double[]>();
+    
+    Map<String, Integer[]> markedValues = new HashMap<String, Integer[]>();
     
     Double  time =0.0;
     SimpleDoubleProperty masterTime = new SimpleDoubleProperty(0.0);
@@ -181,8 +197,8 @@ public class FXMLController implements Initializable {
     
     TranslateTransition timeTransition;
     
-    double collectStart;
-    double collectEnd;
+    Double collectStart;
+    Double collectEnd;
     
     
     //regex for making sure fields are digits
@@ -199,76 +215,145 @@ public class FXMLController implements Initializable {
     @FXML
     void start(ActionEvent event) {
         
-        if(timerThread != null)
-            timerThread.cancel();
         
-        
-        
-        
-        
-        if (thermalMedia == null && media == null && audioPlayer == null)
-            return;
         
         if (startButton.getText().equals("Start")) {
-            playing = true;
-
-            startButton.setText("Pause");
-            if (media != null) {
-
-                new Service<Void>() {
-                    protected Task<Void> createTask() {
-                        return new Task<Void>() {
-                            protected Void call() {
-                                Platform.runLater(() -> {
-                                    try {
-                                        Thread.sleep(0);
-                                    } catch (InterruptedException ex) {
-                                        Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
-                                    }
-                                    media.play();
-                                });
-                                return null;
-                            }
-                        };
-                    }
-                }.start();
-
-            }
-            if (thermalMedia != null) {
-
-                new Service<Void>() {
-                    protected Task<Void> createTask() {
-                        return new Task<Void>() {
-                            protected Void call() {
-                                Platform.runLater(() -> {
-                                    thermalMedia.play();
-                                });
-                                return null;
-                            }
-                        };
-                    }
-                }.start();
-
-            }
-            if (audioPlayer != null) {
-                
-                new Service<Void>() {
-                    protected Task<Void> createTask() {
-                        return new Task<Void>() {
-                            protected Void call() {
-                                Platform.runLater(() -> {
-                                    audioPlayer.play();
-                                });
-                                return null;
-                            }
-                        };
-                    }
-                }.start();
-            }
-            
+            handleStart();
 
         } else {
-            playing = false;
+            handlePause();
+        }
+        
+         
+    }
+    
+    void handleStart(){
+        if(timerThread != null)
+            timerThread.cancel(); 
+        
+        timerThread = new ScheduledService<Void>() {
+            protected Task<Void> createTask() {
+                return new Task<Void>() {
+                    protected Void call() {
+                        Platform.runLater(() -> {
+                            if (playing && (masterTime.get() <= time)) {
+                                masterTime.set(masterTime.get() + .075);
+
+                            }
+
+                        });
+                        return null;
+                    }
+                };
+            }
+        };
+        
+        graphThread = new ScheduledService<Void>() {
+            protected Task<Void> createTask() {
+                return new Task<Void>() {
+                    protected Void call() {
+                        Platform.runLater(() -> {
+
+                            if (playing) {
+
+                            }
+
+                        });
+                        return null;
+                    }
+                };
+            }
+        };     
+             
+        timerThread.setPeriod(Duration.millis(75));
+        if(masterTime.get() != 0.0){
+            timerThread.setDelay(Duration.millis(0));
+        }else{
+            timerThread.setDelay(Duration.millis(0));
+        }
+        timerThread.start(); 
+        playing = true;
+        startButton.setText("Pause");
+        
+        
+        if (thermalMedia == null && media == null && audioPlayer == null) {
+            return;
+        }
+
+        
+        if (media != null) {
+
+            new Service<Void>() {
+                protected Task<Void> createTask() {
+                    return new Task<Void>() {
+                        protected Void call() {
+                            Platform.runLater(() -> {
+                                try {
+                                    Thread.sleep(0);
+                                } catch (InterruptedException ex) {
+                                    Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                media.play();
+                            });
+                            return null;
+                        }
+                    };
+                }
+            }.start();
+
+        }
+        if (thermalMedia != null) {
+
+            new Service<Void>() {
+                protected Task<Void> createTask() {
+                    return new Task<Void>() {
+                        protected Void call() {
+                            Platform.runLater(() -> {
+                                try {
+                                    Thread.sleep(0);
+                                } catch (InterruptedException ex) {
+                                    Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                thermalMedia.play();
+                            });
+                            return null;
+                        }
+                    };
+                }
+            }.start();
+
+        }
+        if (audioPlayer != null) {
+
+            new Service<Void>() {
+                protected Task<Void> createTask() {
+                    return new Task<Void>() {
+                        protected Void call() {
+                            Platform.runLater(() -> {
+                                try {
+                                    Thread.sleep(0);
+                                } catch (InterruptedException ex) {
+                                    Logger.getLogger(FXMLController.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                audioPlayer.play();
+                            });
+                            return null;
+                        }
+                    };
+                }
+            }.start();
+        }
+
+
+        
+        
+        
+        
+           
+    }
+    
+    void handlePause(){
+         playing = false;
             
             startButton.setText("Start");
             if (media != null) {
@@ -280,31 +365,20 @@ public class FXMLController implements Initializable {
             if (audioPlayer != null) {
                 audioPlayer.pause();
             }
-        }
-        
-        
-        
-        
-        
-        
-        
-        timerThread.setPeriod(Duration.millis(75));
-        timerThread.start();
-      
-        graphThread.setPeriod(Duration.millis(200));
-        graphThread.start();
-        
     }
-
+    
+    
     @FXML
     void stop(ActionEvent event) {
         handleStop();
     }
     
     void handleStop(){
-        collectButton.setText("Mark Start Value");
+        collectButton.setText("Start Marking");
         
         playing = false;
+        
+        timerThread.cancel();
         
         masterTime.set(0.00);
         
@@ -320,7 +394,9 @@ public class FXMLController implements Initializable {
             audioPlayer.stop();
             audioPlayer.pause();
         }
-
+        
+        refreshGraphs();
+        
         startButton.setText("Start");
     }
     
@@ -483,7 +559,7 @@ public class FXMLController implements Initializable {
                 
                 //DataViewer dataviewer = new DataViewer();
                 // Create dataviewer configuration
-                dataViewerVector.add(new DataViewer());
+                dataViewerVector.add(i, new DataViewer());
                     
                 
                 
@@ -530,51 +606,13 @@ public class FXMLController implements Initializable {
         
     }
     
-    /*
-    public void update(){
-        
-        LineTrace<Double> playTrace = new LineTrace<>();
-        playTrace.setTraceColour(TraceColour.BLUE);
-        
-        for (int i = 0; i < 1; i++) {
-             
-            
-            
-            playTrace.setxArray(copyOfRange( timeValues.get(i) ,0 ,(int) (Math.round(masterTime.get()) * freq)  ));
-            playTrace.setyArray(copyOfRange( dataSets.get(i) ,0 ,(int) (Math.round(masterTime.get()) * freq) ));
-            
-            PlotData plot = new PlotData();
-            plot.addTrace(playTrace);
-            dataViewerVector.get(i).resetPlot();
-            
-            dataViewerVector.get(i).updatePlot(plotVector.get(i));
-            dataViewerVector.get(i).updatePlot(plot);
-
-        }
-    }
-    */
-     public void updateCollect(){
-        
-        LineTrace<Double> playTrace = new LineTrace<>();
-        playTrace.setTraceColour(TraceColour.BLUE);
-        
-        for (int i = 0; i < numColumns; i++) {             
-            
-            
-            playTrace.setxArray(copyOfRange( timeValues.get(i) ,(int) Math.round(collectStart * freq) ,(int) Math.round(collectEnd * freq)  ));
-            playTrace.setyArray(copyOfRange( dataSets.get(i) ,(int) Math.round(collectStart * freq) ,(int) Math.round(collectEnd * freq) ));
-            
-            PlotData plot = new PlotData();
-            plot.addTrace(playTrace);
-            //dataViewerVector.get(i).resetPlot();
-            
-            dataViewerVector.get(i).updatePlot(plotVector.get(i));
-            dataViewerVector.get(i).updatePlot(plot);
-
-        }
-    }
+    
      
-     public void refresh(){ 
+
+
+       
+     
+     public void refreshGraphs(){ 
          
         for (int i = 0; i < numColumns; i++) {   
             
@@ -583,17 +621,7 @@ public class FXMLController implements Initializable {
         }
     }
     
-    @FXML
-    void clock( Double  millis)
-    {
-       timeArray[0] += millis /1000.0;
-       timeArray[1] += millis /1000.0; 
-       time += millis /1000.0; 
-       
-       
-    }
     
-  
     
     @FXML
     void getMp4(ActionEvent event) {
@@ -609,8 +637,7 @@ public class FXMLController implements Initializable {
         File selected = mp4Chooser.showOpenDialog(null);
         
         if(selected != null) {
-            //reset button and add new videos
-            
+            //reset button and add new videos            
             startButton.setText("Start");
             media = new MediaPlayer(new Media(selected.toURI().toString()));
             VideoPlayer.setMediaPlayer(media);
@@ -642,18 +669,19 @@ public class FXMLController implements Initializable {
     void collect(ActionEvent event) {
         
         
-        if(collectButton.getText().equals("Mark Start Value")){
+        if(collectButton.getText().equals("Start Marking")){
            
-            collectStart = masterTime.get();
-            collectButton.setText("Mark End Value"); 
+             
             
             Service refreshThread = new Service<Void>() {
                 protected Task<Void> createTask() {
                     return new Task<Void>() {
                         protected Void call() {
                             Platform.runLater(() -> {                                
-                                //refresh();                                
-                                                        
+                                                               
+                                collectStart = masterTime.get();
+                                collectButton.setText("End Marking");
+                                markStart.setText(collectStart.toString());
                             });
                             return null;
                         }
@@ -662,17 +690,19 @@ public class FXMLController implements Initializable {
             };
             refreshThread.start();
             
-        } else if(collectButton.getText().equals("Mark End Value")){
+        } else if(collectButton.getText().equals("End Marking")){
             collectEnd = masterTime.get();
-            collectButton.setText("Mark Start Value");
+            collectButton.setText("Start Marking");
+            handlePause();
             
             Service collectThread = new Service<Void>() {
                 protected Task<Void> createTask() {
                     return new Task<Void>() {
                         protected Void call() {
                             Platform.runLater(() -> {  
-                                
-                                handleStop();
+                                collectEnd = masterTime.get(); 
+                                markEnd.setText(collectEnd.toString());
+                                //handleStop();
                                 updateCollect();                                    
                                                         
                             });
@@ -685,6 +715,32 @@ public class FXMLController implements Initializable {
                        
         }
         
+
+    }
+    
+    public void updateCollect(){
+        
+        LineTrace<Double> playTrace = new LineTrace<>();
+        playTrace.setTraceColour(TraceColour.BLUE);
+
+        for (int i = 0; i < numColumns; i++) {
+
+            playTrace.setxArray(copyOfRange(timeValues.get(i), (int) Math.round(collectStart * freq), (int) Math.round(collectEnd * freq)));
+            playTrace.setyArray(copyOfRange(dataSets.get(i), (int) Math.round(collectStart * freq), (int) Math.round(collectEnd * freq)));
+
+            PlotData plot = new PlotData();
+            plot.addTrace(playTrace);
+            //dataViewerVector.get(i).resetPlot();
+
+            dataViewerVector.get(i).updatePlot(plotVector.get(i));
+            dataViewerVector.get(i).updatePlot(plot);
+
+        }
+
+    }
+    
+    @FXML
+    void addMark(ActionEvent event) {
 
     }
     
@@ -721,39 +777,7 @@ public class FXMLController implements Initializable {
             .forEach(div ->  div.setMouseTransparent(true) );
         
         
-        timerThread = new ScheduledService<Void>() {
-                protected Task<Void> createTask() {
-                    return new Task<Void>() {
-                        protected Void call() {
-                            Platform.runLater(() -> {                                
-                                if(playing && (masterTime.get() <= time)){
-                                    masterTime.set(masterTime.get() + .075);    
-                                    
-                                }                                      
-                                                        
-                            });
-                            return null;
-                        }
-                    };
-                }
-            };
         
-        graphThread = new ScheduledService<Void>() {
-                protected Task<Void> createTask() {
-                    return new Task<Void>() {
-                        protected Void call() {
-                            Platform.runLater(() -> {
-                                
-                                if(playing){                                    
-                                                                          
-                                }                                       
-                                                        
-                            });
-                            return null;
-                        }
-                    };
-                }
-            };
         
     }    
 }
