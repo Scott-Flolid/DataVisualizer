@@ -24,17 +24,14 @@
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
-              <MenuItem mnemonicParsing="false" text="Close" />
+                  <MenuItem fx:id="thermalSelector" mnemonicParsing="false" onAction="#getThermal" text="Open Thermal Video...." />
+                  <MenuItem fx:id="videoSelector" mnemonicParsing="false" onAction="#getMp4" text="Open Video..." />
+                  <MenuItem fx:id="CSVSelector" mnemonicParsing="false" onAction="#getCSV" text="Open BioSignal Data(CSV) ..." />
+                  <MenuItem fx:id="audioSelector" mnemonicParsing="false" onAction="#getMp3" text="Open Audio (MP3) ..." />
+                  <MenuItem fx:id="storeMark" mnemonicParsing="false" onAction="#storeMarks" text="Save Marked Data" />
             </items>
           </Menu>
-          <Menu mnemonicParsing="false" text="Edit">
-               <items>
-                  <MenuItem fx:id="thermalSelector" mnemonicParsing="false" onAction="#getThermal" text="Select Thermal Video...." />
-                  <MenuItem fx:id="videoSelector" mnemonicParsing="false" onAction="#getMp4" text="Select Video..." />
-                  <MenuItem fx:id="CSVSelector" mnemonicParsing="false" onAction="#getCSV" text="Get BioSignal Data(CSV) ..." />
-                  <MenuItem fx:id="audioSelector" mnemonicParsing="false" onAction="#getMp3" text="Select Audio (MP3) ..." />
-               </items>
-          </Menu>
+          <Menu mnemonicParsing="false" text="Edit" />
           <Menu mnemonicParsing="false" text="Help">
             <items>
               <MenuItem mnemonicParsing="false" text="About" />
@@ -57,12 +54,12 @@
                      <children>
                         <Pane fx:id="videoPane">
                            <children>
-                              <MediaView fx:id="VideoPlayer" fitHeight="200.0" fitWidth="200.0" />
+                              <MediaView fx:id="VideoPlayer" fitHeight="175.0" fitWidth="300.0" layoutX="50.0" layoutY="14.0" />
                            </children>
                         </Pane>
                         <Pane fx:id="thermalPane" prefHeight="199.0" prefWidth="400.0" GridPane.hgrow="NEVER" GridPane.rowIndex="1">
                            <children>
-                              <MediaView fx:id="ThermalVideo" fitHeight="200.0" fitWidth="200.0" />
+                              <MediaView fx:id="ThermalVideo" fitHeight="175.0" fitWidth="300.0" layoutX="50.0" layoutY="8.0" />
                            </children>
                         </Pane>
                      </children>

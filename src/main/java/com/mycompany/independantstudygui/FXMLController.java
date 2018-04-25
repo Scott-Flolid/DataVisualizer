@@ -14,6 +14,7 @@ import javafx.fxml.Initializable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.text.DecimalFormat;
@@ -21,6 +22,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import static java.util.Arrays.copyOfRange;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -66,6 +68,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
 
@@ -140,6 +143,8 @@ public class FXMLController implements Initializable {
     @FXML
     private AnchorPane scrollAnchor;
     
+    @FXML
+    private MenuItem storeMark;    
         
     @FXML
     private Label timeArea;
@@ -178,6 +183,7 @@ public class FXMLController implements Initializable {
     
     ArrayList<Double[]> dataSets = new ArrayList<Double[]>();
     ArrayList<Double[]> timeValues = new ArrayList<Double[]>();
+    ArrayList<String> graphTitles = new ArrayList();
     
     Map<String, Integer[]> markedValues = new HashMap<String, Integer[]>();
     
@@ -520,7 +526,10 @@ public class FXMLController implements Initializable {
                 DataViewerConfiguration config = new DataViewerConfiguration();
                 config.setxAxisTitle("");
                 // Y axis title
-                config.setyAxisTitle( (String) data.iterator().next().get(i));
+              
+                String title = (String) data.iterator().next().get(i);
+                config.setyAxisTitle( title);
+                graphTitles.add(title);
                 
                 //fill arrays with the values to be passed to the graph
                 //from the CSV file   
@@ -831,7 +840,7 @@ public class FXMLController implements Initializable {
             
             Integer markArray[] = new Integer[numRows];
             
-            for (int i = 0; i < numColumns; i++) {
+            for (int i = 0; i < numRows; i++) {
 
                 
                 if( (i >= startIndex ) && ( i <= endIndex) ){
@@ -856,6 +865,7 @@ public class FXMLController implements Initializable {
             if (alert.getResult() == ButtonType.YES) {
                 markedValues.put(title, markArray);
                 
+                //System.out.println(markArray.toString());
             }
             
             
@@ -863,6 +873,83 @@ public class FXMLController implements Initializable {
         
         
     }
+    
+    @FXML
+    void storeMarks(ActionEvent event) throws IOException {
+        
+        FileWriter fileWriter = null;
+        FileChooser csvChooser = new FileChooser();  
+        
+        //add filter to only get csv files
+        FileChooser.ExtensionFilter csvExtension = 
+                new FileChooser.ExtensionFilter("CSV Files ( *.csv)"
+                , "*.csv");
+        
+        
+        
+        
+        csvChooser.getExtensionFilters().add(csvExtension);
+        
+        csvChooser.setTitle("Select where to save ");
+        File selected = csvChooser.showSaveDialog(null);
+        
+        if (selected != null) {
+             fileWriter = new FileWriter(selected);
+        } else{
+            return;
+        }
+        
+        
+       
+        
+        CSVPrinter csvData = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
+        
+        List titleRow = new ArrayList();
+        
+        //first we add all of our titles
+        titleRow.add("time");
+        
+        for(String title: graphTitles){
+            titleRow.add(title);
+            
+        }
+        for(Map.Entry<String, Integer[]> entry: markedValues.entrySet()){
+            
+            titleRow.add(entry.getKey());
+        }
+        csvData.printRecord(titleRow);
+        
+        
+        Double[] times = timeValues.get(0);
+        //add all data next
+        for(int row = 0; row < numRows; row++){
+            List rowData = new ArrayList();
+
+            rowData.add(times[row]);
+
+            for (Double[] set : dataSets) {
+                rowData.add(set[row]);
+            }
+            for (Map.Entry<String, Integer[]> entry : markedValues.entrySet()) {
+
+                rowData.add(entry.getValue()[row]);
+            }
+            
+            csvData.printRecord(rowData);
+            
+        }
+        
+        
+        
+        fileWriter.close();
+        
+        
+        
+        
+        
+    }
+    
+    
     
    
     @Override
@@ -877,11 +964,11 @@ public class FXMLController implements Initializable {
         GraphVBox.maxWidthProperty().bind(scrollPane.widthProperty().subtract(10));
         GraphVBox.minWidthProperty().bind(scrollPane.widthProperty().subtract(10));
         
-        VideoPlayer.fitWidthProperty().bind(videoPane.widthProperty());
-        VideoPlayer.fitHeightProperty().bind(videoPane.heightProperty());
+        //VideoPlayer.fitWidthProperty().bind(videoPane.widthProperty());
+        //VideoPlayer.fitHeightProperty().bind(videoPane.heightProperty());
         
-        ThermalVideo.fitWidthProperty().bind(thermalPane.widthProperty());
-        ThermalVideo.fitHeightProperty().bind(thermalPane.heightProperty());
+       // ThermalVideo.fitWidthProperty().bind(thermalPane.widthProperty());
+       // ThermalVideo.fitHeightProperty().bind(thermalPane.heightProperty());
         
         
         
