@@ -812,7 +812,7 @@ public class FXMLController implements Initializable {
             
             Integer markArray[] = markedValues.get(title);
             
-            for (int i = 0; i < numColumns; i++) {
+            for (int i = 0; i < numRows; i++) {
 
                 
                 if( (i >= startIndex ) && ( i <= endIndex) ){
